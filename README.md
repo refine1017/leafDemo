@@ -17,3 +17,4 @@ cd bin
 ```
 open client/index.html in browser
 ```
+![截图](screenshot.png)
