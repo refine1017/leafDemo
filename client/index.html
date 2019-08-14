@@ -1,0 +1,123 @@
+<script type="text/javascript">
+    var ws;
+    var connectStatus = false;
+
+    var msgs = {
+        "Hello": '{"Hello": {"name": "leaf"}}',
+        "Register": '{"RegisterReq": {"username": "leaf", "nickname": "leaf"}}',
+        "Login": '{"LoginReq": {"username": "leaf"}}',
+        "Talk": '{"TalkReq": {"msg": "leaf"}}',
+    };
+
+    Date.prototype.Format = function(fmt) {
+        var o = {
+            "M+" : this.getMonth()+1,
+            "d+" : this.getDate(),
+            "h+" : this.getHours(),
+            "m+" : this.getMinutes(),
+            "s+" : this.getSeconds(),
+            "q+" : Math.floor((this.getMonth()+3)/3),
+            "S"  : this.getMilliseconds()
+        };
+        if(/(y+)/.test(fmt))
+            fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+        for(var k in o)
+            if(new RegExp("("+ k +")").test(fmt))
+                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+        return fmt;
+    }
+
+    function connect() {
+        var serverUrl = document.getElementById("serverUrl").value;
+
+        ws = new WebSocket(serverUrl);
+
+        document.getElementById("connectStatus").innerHTML = "Wait Connect ... ";
+        document.getElementById("connectStatus").style.color = "orange";
+
+        ws.onopen = function() {
+            document.getElementById("connectStatus").style.color = "green";
+            document.getElementById("connectStatus").innerHTML = "Success"
+
+            connectStatus = true
+        };
+
+        ws.onerror = function() {
+            document.getElementById("connectStatus").style.color = "red";
+            document.getElementById("connectStatus").innerHTML = "Fail"
+        }
+
+        ws.onmessage = function(e) {
+            var reader = new FileReader();
+            reader.readAsText(e.data)
+            reader.onload = function() {
+                document.getElementById('responseTxt').innerHTML = new Date().Format("yyyy-MM-dd hh:mm:ss") + " -- " + this.result + "<br/>" + document.getElementById('responseTxt').innerHTML;
+            }
+        }
+    }
+
+    function setMsg(msg) {
+       document.getElementById('requestTxt').innerText = msgs[msg];
+    }
+
+    function clearResponse() {
+        document.getElementById('responseTxt').innerHTML = "";
+    }
+
+    function sendRequest() {
+        if (connectStatus === false) {
+            alert("Connection is fail");
+            return
+        }
+
+        var request = document.getElementById('requestTxt').value;
+        if (request === "") {
+            alert("Request is empty");
+            return
+        }
+
+        ws.send(request)
+    }
+
+</script>
+
+<html>
+<head>
+    <title>API Tester</title>
+</head>
+<body>
+<h1>API Tester</h1>
+<hr>
+ServerUrl:
+<input type="text" id="serverUrl" value="ws://127.0.0.1:3653" />
+<input type="button" name="Send" onclick="connect()" value="Connect" />
+<span id="connectStatus" style="color: orange">Wait Connect ... </span>
+<hr>
+<div>
+    <div style="float: left; margin-right: 20px">
+        <h2>Request:</h2>
+        <textarea cols="50" rows="10" id="requestTxt"></textarea>
+    </div>
+    <div style="float: left">
+        <h2>Response:</h2>
+        <div id="responseTxt" style="overflow: auto; height: 152px; width: 600px; border: grey solid 1px"></div>
+    </div>
+</div>
+
+<div style="clear: both; margin-top: 20px">
+    <h2>Protocol:</h2>
+    <input type="button" onclick="setMsg('Hello')" value="Hello" />
+    <input type="button" onclick="setMsg('Register')" value="Register" />
+    <input type="button" onclick="setMsg('Login')" value="Login" />
+    <input type="button" onclick="setMsg('Talk')" value="Talk" />
+</div>
+
+<div>
+    <hr>
+
+    <input style="margin: 20px 0; width: 200px; height: 50px; font-size: 25px" type="button" name="Send" onclick="sendRequest()" value="Send" />
+    <input style="margin: 20px 0; width: 200px; height: 50px; font-size: 25px" type="button" name="Send" onclick="clearResponse()" value="Clear" />
+</div>
+
+</body>
+</html>
